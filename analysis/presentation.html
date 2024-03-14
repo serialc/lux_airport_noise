@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="presentation_files/libs/clipboard/clipboard.min.js"></script>
+<script src="presentation_files/libs/quarto-html/tabby.min.js"></script>
+<script src="presentation_files/libs/quarto-html/popper.min.js"></script>
+<script src="presentation_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="presentation_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="presentation_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="presentation_files/libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
+<link href="presentation_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.3.450">
+
+  <meta name="author" content="Cyrille Médard de Chardon">
+  <title>Parsing PDFs</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="presentation_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="presentation_files/libs/revealjs/dist/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      { color: #003b4f; background-color: #f1f3f5; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #003b4f; } /* Normal */
+    code span.al { color: #ad0000; } /* Alert */
+    code span.an { color: #5e5e5e; } /* Annotation */
+    code span.at { color: #657422; } /* Attribute */
+    code span.bn { color: #ad0000; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #003b4f; } /* ControlFlow */
+    code span.ch { color: #20794d; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #5e5e5e; } /* Comment */
+    code span.cv { color: #5e5e5e; font-style: italic; } /* CommentVar */
+    code span.do { color: #5e5e5e; font-style: italic; } /* Documentation */
+    code span.dt { color: #ad0000; } /* DataType */
+    code span.dv { color: #ad0000; } /* DecVal */
+    code span.er { color: #ad0000; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #ad0000; } /* Float */
+    code span.fu { color: #4758ab; } /* Function */
+    code span.im { color: #00769e; } /* Import */
+    code span.in { color: #5e5e5e; } /* Information */
+    code span.kw { color: #003b4f; } /* Keyword */
+    code span.op { color: #5e5e5e; } /* Operator */
+    code span.ot { color: #003b4f; } /* Other */
+    code span.pp { color: #ad0000; } /* Preprocessor */
+    code span.sc { color: #5e5e5e; } /* SpecialChar */
+    code span.ss { color: #20794d; } /* SpecialString */
+    code span.st { color: #20794d; } /* String */
+    code span.va { color: #111111; } /* Variable */
+    code span.vs { color: #20794d; } /* VerbatimString */
+    code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="presentation_files/libs/revealjs/dist/theme/quarto.css">
+  <link href="presentation_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="presentation_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="presentation_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="presentation_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+
+  .callout {
+    margin-top: 1em;
+    margin-bottom: 1em;  
+    border-radius: .25rem;
+  }
+
+  .callout.callout-style-simple { 
+    padding: 0em 0.5em;
+    border-left: solid #acacac .3rem;
+    border-right: solid 1px silver;
+    border-top: solid 1px silver;
+    border-bottom: solid 1px silver;
+    display: flex;
+  }
+
+  .callout.callout-style-default {
+    border-left: solid #acacac .3rem;
+    border-right: solid 1px silver;
+    border-top: solid 1px silver;
+    border-bottom: solid 1px silver;
+  }
+
+  .callout .callout-body-container {
+    flex-grow: 1;
+  }
+
+  .callout.callout-style-simple .callout-body {
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  .callout.callout-style-default .callout-body {
+    font-size: 0.9rem;
+    font-weight: 400;
+  }
+
+  .callout.callout-titled.callout-style-simple .callout-body {
+    margin-top: 0.2em;
+  }
+
+  .callout:not(.callout-titled) .callout-body {
+      display: flex;
+  }
+
+  .callout:not(.no-icon).callout-titled.callout-style-simple .callout-content {
+    padding-left: 1.6em;
+  }
+
+  .callout.callout-titled .callout-header {
+    padding-top: 0.2em;
+    margin-bottom: -0.2em;
+  }
+
+  .callout.callout-titled .callout-title  p {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+  }
+    
+  .callout.callout-titled.callout-style-simple .callout-content  p {
+    margin-top: 0;
+  }
+
+  .callout.callout-titled.callout-style-default .callout-content  p {
+    margin-top: 0.7em;
+  }
+
+  .callout.callout-style-simple div.callout-title {
+    border-bottom: none;
+    font-size: .9rem;
+    font-weight: 600;
+    opacity: 75%;
+  }
+
+  .callout.callout-style-default  div.callout-title {
+    border-bottom: none;
+    font-weight: 600;
+    opacity: 85%;
+    font-size: 0.9rem;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+  }
+
+  .callout.callout-style-default div.callout-content {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+  }
+
+  .callout.callout-style-simple .callout-icon::before {
+    height: 1rem;
+    width: 1rem;
+    display: inline-block;
+    content: "";
+    background-repeat: no-repeat;
+    background-size: 1rem 1rem;
+  }
+
+  .callout.callout-style-default .callout-icon::before {
+    height: 0.9rem;
+    width: 0.9rem;
+    display: inline-block;
+    content: "";
+    background-repeat: no-repeat;
+    background-size: 0.9rem 0.9rem;
+  }
+
+  .callout-title {
+    display: flex
+  }
+    
+  .callout-icon::before {
+    margin-top: 1rem;
+    padding-right: .5rem;
+  }
+
+  .callout.no-icon::before {
+    display: none !important;
+  }
+
+  .callout.callout-titled .callout-body > .callout-content > :last-child {
+    margin-bottom: 0.5rem;
+  }
+
+  .callout.callout-titled .callout-icon::before {
+    margin-top: .5rem;
+    padding-right: .5rem;
+  }
+
+  .callout:not(.callout-titled) .callout-icon::before {
+    margin-top: 1rem;
+    padding-right: .5rem;
+  }
+
+  /* Callout Types */
+
+  div.callout-note {
+    border-left-color: #4582ec !important;
+  }
+
+  div.callout-note .callout-icon::before {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAAEU0lEQVRYCcVXTWhcVRQ+586kSUMMxkyaElstCto2SIhitS5Ek8xUKV2poatCcVHtUlFQk8mbaaziwpWgglJwVaquitBOfhQXFlqlzSJpFSpIYyXNjBNiTCck7x2/8/LeNDOZxDuEkgOXe++553zfefee+/OYLOXFk3+1LLrRdiO81yNqZ6K9cG0P3MeFaMIQjXssE8Z1JzLO9ls20MBZX7oG8w9GxB0goaPrW5aNMp1yOZIa7Wv6o2ykpLtmAPs/vrG14Z+6d4jpbSKuhdcSyq9wGMPXjonwmESXrriLzFGOdDBLB8Y6MNYBu0dRokSygMA/mrun8MGFN3behm6VVAwg4WR3i6FvYK1T7MHo9BK7ydH+1uurECoouk5MPRyVSBrBHMYwVobG2aOXM07sWrn5qgB60rc6mcwIDJtQrnrEr44kmy+UO9r0u9O5/YbkS9juQckLed3DyW2XV/qWBBB3ptvI8EUY3I9p/67OW+g967TNr3Sotn3IuVlfMLVnsBwH4fsnebJvyGm5GeIUA3jljERmrv49SizPYuq+z7c2H/jlGC+Ghhupn/hcapqmcudB9jwJ/3jvnvu6vu5lVzF1fXyZuZZ7U8nRmVzytvT+H3kilYvH09mLWrQdwFSsFEsxFVs5fK7A0g8gMZjbif4ACpKbjv7gNGaD8bUrlk8x+KRflttr22JEMRUbTUwwDQScyzPgedQHZT0xnx7ujw2jfVfExwYHwOsDTjLdJ2ebmeQIlJ7neo41s/DrsL3kl+W2lWvAga0tR3zueGr6GL78M3ifH0rGXrBC2aAR8uYcIA5gwV8zIE8onoh8u0Fca/ciF7j1uOzEnqcIm59sEXoGc0+z6+H45V1CvAvHcD7THztu669cnp+L0okAeIc6zjbM/24LgGM1gZk7jnRu1aQWoU9sfUOuhrmtaPIO3YY1KLLWZaEO5TKUbMY5zx8W9UJ6elpLwKXbsaZ4EFl7B4bMtDv0iRipKoDQT2sNQI9b1utXFdYisi+wzZ/ri/1m7QfDgEuvgUUEIJPq3DhX/5DWNqIXDOweC2wvIR90Oq3lDpdMIgD2r0dXvGdsEW5H6x6HLRJYU7C69VefO1x8Gde1ZFSJLfWS1jbCnhtOPxmpfv2LXOA2Xk2tvnwKKPFuZ/oRmwBwqRQDcKNeVQkYcOjtWVBuM/JuYw5b6isojIkYxyYAFn5K7ZBF10fea52y8QltAg6jnMqNHFBmGkQ1j+U43HMi2xMar1Nv0zGsf1s8nUsmUtPOOrbFIR8bHFDMB5zL13Gmr/kGlCkUzedTzzmzsaJXhYawnA3UmARpiYj5ooJZiUoxFRtK3X6pgNPv+IZVPcnwbOl6f+aBaO1CNvPW9n9LmCp01nuSaTRF2YxHqZ8DYQT6WsXT+RD6eUztwYLZ8rM+rcPxamv1VQzFUkzFXvkiVrySGQgJNvXHJAxiU3/NwiC03rSf05VBaPtu/Z7/B8Yn/w7eguloAAAAAElFTkSuQmCC');
+  }
+
+  div.callout-note.callout-style-default .callout-title {
+    background-color: #dae6fb
+  }
+
+  div.callout-important {
+    border-left-color: #d9534f !important;
+  }
+
+  div.callout-important .callout-icon::before {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAAEKklEQVRYCcVXTWhcVRS+575MJym48A+hSRFr00ySRQhURRfd2HYjk2SSTokuBCkU2o0LoSKKraKIBTcuFCoidGFD08nkBzdREbpQ1EDNIv8qSGMFUboImMSZd4/f9zJv8ibJMC8xJQfO3HPPPef7zrvvvnvviIkpC9nsw0UttFunbUhpFzFtarSd6WJkStVMw5xyVqYTvkwfzuf/5FgtkVoB0729j1rjXwThS7Vio+Mo6DNnvLfahoZ+i/o32lULuJ3NNiz7q6+pyAUkJaFF6JwaM2lUJlV0MlnQn5aTRbEu0SEqHUa0A4AdiGuB1kFXRfVyg5d87+Dg4DL6m2TLAub60ilj7A1Ec4odSAc8X95sHh7+ZRPCFo6Fnp7HfU/fBng/hi10CjCnWnJjsxvDNxWw0NfV6Rv5GgP3I3jGWXumdTD/3cbEOP2ZbOZp69yniG3FQ9z1jD7bnBu9Fc2tKGC2q+uAJOQHBDRiZX1x36o7fWBs7J9ownbtO+n0/qWkvW7UPIfc37WgT6ZGR++EOJyeQDSb9UB+DZ1G6DdLDzyS+b/kBCYGsYgJbSQHuThGKRcw5xdeQf8YdNHsc6ePXrlSYMBuSIAFTGAtQo+VuALo4BX83N190NWZWbynBjhOHsmNfFWLeL6v+ynsA58zDvvAC8j5PkbOcXCMg2PZFk3q8MjI7WAG/Dp9AwP7jdGBOOQkAvlFUB+irtm16I1Zw9YBcpGTGXYmk3kQIC/Cds55l+iMI3jqhjAuaoe+am2Jw5GT3Nbz3CkE12NavmzN5+erJW7046n/CH1RO/RVa8lBLozXk9uqykkGAyRXLWlLv5jyp4RFsG5vGVzpDLnIjTWgnRy2Rr+tDKvRc7Y8AyZq10jj8DqXdnIRNtFZb+t/ZRtXcDiVnzpqx8mPcDWxgARUqx0W1QB9MeUZiNrV4qP+Ehc+BpNgATsTX8ozYKL2NtFYAHc84fG7ndxUPr+AR/iQSns7uSUufAymwDOb2+NjK27lEFocm/EE2WpyIy/Hi66MWuMKJn8RvxIcj87IM5Vh9663ziW36kR0HNenXuxmfaD8JC7tfKbrhFr7LiZCrMjrzTeGx+PmkosrkNzW94ObzwocJ7A1HokLolY+AvkTiD/q1H0cN48c5EL8Crkttsa/AXQVDmutfyku0E7jShx49XqV3MFK8IryDhYVbj7Sj2P2eBxwcXoe8T8idsKKPRcnZw1b+slFTubwUwhktrfnAt7J++jwQtLZcm3sr9LQrjRzz6cfMv9aLvgmnAGvpoaGLxM4mAEaLV7iAzQ3oU0IvD5x9ix3yF2RAAuYAOO2f7PEFWCXZ4C9Pb2UsgDeVnFSpbFK7/IWu7TPTvBqzbGdCHOJQSxiEjt6IyZmxQyEJHv6xyQsYk//moVFsN2zP6fRImjfq7/n/wFDguUQFNEwugAAAABJRU5ErkJggg==');
+  }
+
+  div.callout-important.callout-style-default .callout-title {
+    background-color: #f7dddc
+  }
+
+  div.callout-warning {
+    border-left-color: #f0ad4e !important;
+  }
+
+  div.callout-warning .callout-icon::before {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAAETklEQVRYCeVWW2gcVRg+58yaTUnizqbipZeX4uWhBEniBaoUX1Ioze52t7sRq6APio9V9MEaoWlVsFasRq0gltaAPuxms8lu0gcviE/FFOstVbSIxgcv6SU7EZqmdc7v9+9mJtNks51NTUH84ed889/PP+cmxP+d5FIbMJmNbpREu4WUkiTtCicKny0l1pIKmBzovF2S+hIJHX8iEu3hZJ5lNZGqyRrGSIQpq15AzF28jgpeY6yk6GVdrfFqdrD6Iw+QlB8g0YS2g7dyQmXM/IDhBhT0UCiRf59lfqmmDvzRt6kByV/m4JjtzuaujMUM2c5Z2d6JdKrRb3K2q6mA+oYVz8JnDdKPmmNthzkAk/lN63sYPgevrguc72aZX/L9C6x09GYyxBgCX4NlvyGUHOKELlm5rXeR1kchuChJt4SSwyddZRXgvwMGvYo4QSlk3/zkHD8UHxwVJA6zjZZqP8v8kK8OWLnIZtLyCAJagYC4rTGW/9Pqj92N/c+LUaAj27movwbi19tk/whRCIE7Q9vyI6yvRpftAKVTdUjOW40X3h5OXsKCdmFcx0xlLJoSuQngnrJe7Kcjm4OMq9FlC7CMmScQANuNvjfP3PjGXDBaUQmbp296S5L4DrpbrHN1T87ZVEZVCzg1FF0Ft+dKrlLukI+/c9ENo+TvlTDbYFvuKPtQ9+l052rXrgKoWkDAFnvh0wTOmYn8R5f4k/jN/fZiCM1tQx9jQQ4ANhqG4hiL0qIFTGViG9DKB7GYzgubnpofgYRwO+DFjh0Zin2m4b/97EDkXkc+f6xYAPX0KK2I/7fUQuwzuwo/L3AkcjugPNixC8cHf0FyPjWlItmLxWw4Ou9YsQCr5fijMGoD/zpdRy95HRysyXA74MWOnscpO4j2y3HAVisw85hX5+AFBRSHt4ShfLFkIMXTqyKFc46xdzQM6XbAi702a7sy04J0+feReMFKp5q9esYLCqAZYw/k14E/xcLLsFElaornTuJB0svMuJINy8xkIYuL+xPAlWRceH6+HX7THJ0djLUom46zREu7tTkxwmf/FdOZ/sh6Q8qvEAiHpm4PJ4a/doJe0gH1t+aHRgCzOvBvJedEK5OFE5jpm4AGP2a8Dxe3gGJ/pAutug9Gp6he92CsSsWBaEcxGx0FHytmIpuqGkOpldqNYQK8cSoXvd+xLxXADw0kf6UkJNFtdo5MOgaLjiQOQHcn+A6h5NuL2s0qsC2LOM75PcF3yr5STuBSAcGG+meA14K/CI21HcS4LBT6tv0QAh8Dr5l93AhZzG5ZJ4VxAqdZUEl9z7WJ4aN+svMvwHHL21UKTd1mqvChH7/Za5xzXBBKrUcB0TQ+Ulgkfbi/H/YT5EptrGzsEK7tR1B7ln9BBwckYfMiuSqklSznIuoIIOM42MQO+QnduCoFCI0bpkzjCjddHPN/F+2Yu+sd9bKNpVwHhbS3LluK/0zgfwD0xYI5dXuzlQAAAABJRU5ErkJggg==');
+  }
+
+  div.callout-warning.callout-style-default .callout-title {
+    background-color: #fcefdc
+  }
+
+  div.callout-tip {
+    border-left-color: #02b875 !important;
+  }
+
+  div.callout-tip .callout-icon::before {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAADr0lEQVRYCe1XTWgTQRj9ZjZV8a9SPIkKgj8I1bMHsUWrqYLVg4Ue6v9BwZOxSYsIerFao7UiUryIqJcqgtpimhbBXoSCVxUFe9CTiogUrUp2Pt+3aUI2u5vdNh4dmMzOzHvvezuz8xNFM0mjnbXaNu1MvFWRXkXEyE6aYOYJpdW4IXuA4r0fo8qqSMDBU0v1HJUgVieAXxzCsdE/YJTdFcVIZQNMyhruOMJKXYFoLfIfIvVIMWdsrd+Rpd86ZmyzzjJmLStqRn0v8lzkb4rVIXvnpScOJuAn2ACC65FkPzEdEy4TPWRLJ2h7z4cArXzzaOdKlbOvKKX25Wl00jSnrwVxAg3o4dRxhO13RBSdNvH0xSARv3adTXbBdTf64IWO2vH0LT+cv4GR1DJt+DUItaQogeBX/chhbTBxEiZ6gftlDNXTrvT7co4ub5A6gp9HIcHvzTa46OS5fBeP87Qm0fQkr4FsYgVQ7Qg+ZayaDg9jhg1GkWj8RG6lkeSacrrHgDaxdoBiZPg+NXV/KifMuB6//JmYH4CntVEHy/keA6x4h4CU5oFy8GzrBS18cLJMXcljAKB6INjWsRcuZBWVaS3GDrqB7rdapVIeA+isQ57Eev9eCqzqOa81CY05VLd6SamW2wA2H3SiTbnbSxmzfp7WtKZkqy4mdyAlGx7ennghYf8voqp9cLSgKdqNfa6RdRsAAkPwRuJZNbpByn+RrJi1RXTwdi8RQF6ymDwGMAtZ6TVE+4uoKh+MYkcLsT0Hk8eAienbiGdjJHZTpmNjlbFJNKDVAp2fJlYju6IreQxQ08UJDNYdoLSl6AadO+fFuCQqVMB1NJwPm69T04Wv5WhfcWyfXQB+wXRs1pt+nCknRa0LVzSA/2B+a9+zQJadb7IyyV24YAxKp2Jqs3emZTuNnKxsah+uabKbMk7CbTgJx/zIgQYErIeTKRQ9yD9wxVof5YolPHqaWo7TD6tJlh7jQnK5z2n3+fGdggIOx2kaa2YI9QWarc5Ce1ipNWMKeSG4DysFF52KBmTNMmn5HqCFkwy34rDg05gDwgH3bBi+sgFhN/e8QvRn8kbamCOhgrZ9GJhFDgfcMHzFb6BAtjKpFhzTjwv1KCVuxHvCbsSiEz4CANnj84cwHdFXAbAOJ4LTSAawGWFn5tDhLMYz6nWeU2wJfIhmIJBefcd/A5FWQWGgrWzyORZ3Q6HuV+Jf0Bj+BTX69fm1zWgK7By1YTXchFDORywnfQ7GpzOo6S+qECrsx2ifVQAAAABJRU5ErkJggg==');
+  }
+
+  div.callout-tip.callout-style-default .callout-title {
+    background-color: #ccf1e3
+  }
+
+  div.callout-caution {
+    border-left-color: #fd7e14 !important;
+  }
+
+  div.callout-caution .callout-icon::before {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAACV0lEQVRYCdVWzWoUQRCuqp2ICBLJXgITZL1EfQDBW/bkzUMUD7klD+ATSHBEfAIfQO+iXsWDxJsHL96EHAwhgzlkg8nBg25XWb0zIb0zs9muYYWkoKeru+vn664fBqElyZNuyh167NXJ8Ut8McjbmEraKHkd7uAnAFku+VWdb3reSmRV8PKSLfZ0Gjn3a6Xlcq9YGb6tADjn+lUfTXtVmaZ1KwBIvFI11rRXlWlatwIAAv2asaa9mlB9wwygiDX26qaw1yYPzFXg2N1GgG0FMF8Oj+VIx7E/03lHx8UhvYyNZLN7BwSPgekXXLribw7w5/c8EF+DBK5idvDVYtEEwMeYefjjLAdEyQ3M9nfOkgnPTEkYU+sxMq0BxNR6jExrAI31H1rzvLEfRIdgcv1XEdj6QTQAS2wtstEALLG1yEZ3QhH6oDX7ExBSFEkFINXH98NTrme5IOaaA7kIfiu2L8A3qhH9zRbukdCqdsA98TdElyeMe5BI8Rs2xHRIsoTSSVFfCFCWGPn9XHb4cdobRIWABNf0add9jakDjQJpJ1bTXOJXnnRXHRf+dNL1ZV1MBRCXhMbaHqGI1JkKIL7+i8uffuP6wVQAzO7+qVEbF6NbS0LJureYcWXUUhH66nLR5rYmva+2tjRFtojkM2aD76HEGAD3tPtKM309FJg5j/K682ywcWJ3PASCcycH/22u+Bh7Aa0ehM2Fu4z0SAE81HF9RkB21c5bEn4Dzw+/qNOyXr3DCTQDMBOdhi4nAgiFDGCinIa2owCEChUwD8qzd03PG+qdW/4fDzjUMcE1ZpIAAAAASUVORK5CYII=');
+  }
+
+  div.callout-caution.callout-style-default .callout-title {
+    background-color: #ffe5d0
+  }
+
+  </style>
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" class="quarto-title-block center">
+  <h1 class="title">Parsing PDFs</h1>
+  <p class="subtitle">Strategies (with R)</p>
+
+<div class="quarto-title-authors">
+<div class="quarto-title-author">
+<div class="quarto-title-author-name">
+Cyrille Médard de Chardon 
+</div>
+</div>
+</div>
+
+</section>
+<section id="problem" class="slide level2">
+<h2>Problem</h2>
+
+<img data-src="imgs/pdf_example.png" title="A screenshot of a PDF page with headings, a table, and graphs" class="r-stretch"></section>
+<section id="the-solution" class="slide level2">
+<h2>The solution?</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">library</span>(pdftools)</span>
+<span id="cb1-2"><a href="#cb1-2"></a>all_pdf <span class="ot">&lt;-</span> <span class="fu">pdf_data</span>(<span class="st">'imgs/2020-byhour_page1.pdf'</span>)</span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="fu">print</span>(all_pdf[[<span class="dv">1</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    width height   x   y space         text
+1      79     14 313 109  TRUE   Luxembourg
+2      43     14 397 109 FALSE      Airport
+3      30     12 307 125  TRUE        Noise
+4      63     12 341 125  TRUE Distribution
+5      13     12 408 125  TRUE           by
+6      26     12 424 125 FALSE         Hour
+7      36     10 234 145  TRUE      Between
+8      47     10 274 145  TRUE   01/01/2020
+9      36     10 323 145  TRUE     00:00:00
+10     15     10 362 145  TRUE          and
+11     47     10 381 145  TRUE   01/01/2020
+12     36     10 430 145  TRUE     23:59:59
+13     25     10 470 145  TRUE       (Local
+14     24     10 498 145 FALSE        Time)
+15     14      8 138 464 FALSE         57.1
+16     14      8 193 464 FALSE         56.2
+17     14      8 243 464 FALSE         50.0
+18     14      8 291 464 FALSE         52.2
+19     14      8 337 464 FALSE         59.0
+20     14      8 383 464 FALSE         59.4
+21     19      9 356 548  TRUE         Page
+22      4      9 378 548  TRUE            1
+23      7      9 385 548  TRUE           of
+24      4      9 395 548 FALSE            4
+25      4      9 701 282 FALSE         0600
+26      4      9 691 282 FALSE         0500
+27      4      9 680 282 FALSE         0400
+28      4      9 670 282 FALSE         0300
+29      4      9 659 282 FALSE         0200
+30      4      9 648 282 FALSE         0100
+31      4      9 637 282 FALSE         0000
+32      4      9 627 282 FALSE         2300
+33      4      9 616 282 FALSE         2200
+34      4      9 605 282 FALSE         2100
+35      9      4 576 293 FALSE         Hour
+36      9      4 490 304  TRUE        Total
+37     11      4 500 304 FALSE         LDEN
+38     22      4 540 304  TRUE   Background
+39     11      4 564 304 FALSE         LDEN
+40     13      4 591 304  TRUE     Aircraft
+41     11      4 605 304 FALSE         LDEN
+42     13      4 641 304  TRUE     Aircraft
+43     10      4 656 304  TRUE        Noise
+44     12      4 668 304 FALSE       Events
+45      7      4 445 317 FALSE          100
+46      4      4 448 333 FALSE           90
+47      4      4 448 349 FALSE           80
+48      4      4 448 365 FALSE           70
+49      4      4 448 381 FALSE           60
+50      9      4 580 428 FALSE         Hour
+51     11      5 552 446  TRUE        Total
+52     22      5 566 446 FALSE     LEvening
+53     11      5 600 446  TRUE        Total
+54     15      5 614 446 FALSE       LNight
+55      4      9 705 418 FALSE         0600
+56      4      9 694 418 FALSE         0500
+57      4      9 684 418 FALSE         0400
+58      4      9 673 418 FALSE         0300
+59      4      9 663 418 FALSE         0200
+60      4      9 651 418 FALSE         0100
+61      4      9 641 418 FALSE         0000
+62      4      9 630 418 FALSE         2300
+63      4      9 620 418 FALSE         2200
+64      4      9 609 418 FALSE         2100
+65      4      9 598 418 FALSE         2000
+66      4      9 587 418 FALSE         1900
+67      4      9 577 418 FALSE         1800
+68      4      9 566 418 FALSE         1700
+69      4      9 555 418 FALSE         1600
+70      4      9 544 418 FALSE         1500
+71      4      9 533 418 FALSE         1400
+72      4      9 523 418 FALSE         1300
+73      4      9 512 418 FALSE         1200
+74      4      4 448 413 FALSE           40
+75      4      9 501 418 FALSE         1100
+76      4      4 448 397 FALSE           50
+77     11      5 504 446  TRUE        Total
+78     13      5 517 446 FALSE         LDAY
+79      8      8 102 464 FALSE           61
+80      4      9 595 282 FALSE         2000
+81      2      4 713 277 FALSE            0
+82      4      9 584 282 FALSE         1900
+83      4      4 446 277 FALSE           40
+84      4      9 574 282 FALSE         1800
+85      2      4 713 261 FALSE            2
+86      4      9 563 282 FALSE         1700
+87      4      4 446 261 FALSE           50
+88      4      9 553 282 FALSE         1600
+89      2      4 713 243 FALSE            4
+90      4      9 542 282 FALSE         1500
+91      4      4 446 243 FALSE           60
+92      4      9 531 282 FALSE         1400
+93      2      4 713 227 FALSE            6
+94      4      9 521 282 FALSE         1300
+95      4      4 446 227 FALSE           70
+96      4      9 509 282 FALSE         1200
+97      2      4 713 210 FALSE            8
+98      4      9 499 282 FALSE         1100
+99      4      4 446 210 FALSE           80
+100     4      9 488 282 FALSE         1000
+101     4      4 713 193 FALSE           10
+102     4      9 478 282 FALSE         0900
+103     4      4 446 193 FALSE           90
+104     4      9 490 418 FALSE         1000
+105     2      8 388 191 FALSE            -
+106     2      8 388 201 FALSE            -
+107     2      8 388 212 FALSE            -
+108     2      8 388 222 FALSE            -
+109     2      8 388 232 FALSE            -
+110     2      8 388 242 FALSE            -
+111     2      8 388 252 FALSE            -
+112     2      8 388 263 FALSE            -
+113     2      8 388 273 FALSE            -
+114     2      8 388 283 FALSE            -
+115     2      8 388 293 FALSE            -
+116     2      8 388 303 FALSE            -
+117     2      8 388 314 FALSE            -
+118     2      8 388 324 FALSE            -
+119     2      8 388 334 FALSE            -
+120     2      8 388 344 FALSE            -
+121    14      8 383 354 FALSE         53.2
+122    14      8 383 365 FALSE         51.8
+123    14      8 383 375 FALSE         52.2
+124    14      8 383 385 FALSE         53.3
+125    14      8 383 395 FALSE         49.9
+126    14      8 383 405 FALSE         50.7
+127    14      8 383 416 FALSE         51.6
+128    14      8 383 426 FALSE         67.7
+129     4      9 480 418 FALSE         0900
+130     2      8 341 192 FALSE            -
+131     2      8 341 202 FALSE            -
+132     2      8 341 212 FALSE            -
+133     2      8 341 222 FALSE            -
+134     2      8 341 232 FALSE            -
+135     2      8 341 243 FALSE            -
+136     2      8 341 253 FALSE            -
+137     2      8 341 263 FALSE            -
+138     2      8 341 273 FALSE            -
+139     2      8 341 283 FALSE            -
+140     2      8 341 294 FALSE            -
+141     2      8 341 304 FALSE            -
+142    14      8 336 314 FALSE         55.1
+143    14      8 336 324 FALSE         61.9
+144    14      8 336 334 FALSE         55.7
+145    14      8 336 345 FALSE         59.8
+146     2      8 341 355 FALSE            -
+147     2      8 341 365 FALSE            -
+148     2      8 341 375 FALSE            -
+149     2      8 341 385 FALSE            -
+150     2      8 341 396 FALSE            -
+151     2      8 341 406 FALSE            -
+152     2      8 341 416 FALSE            -
+153     2      8 341 426 FALSE            -
+154     4      9 467 282 FALSE         0800
+155    14      8 292 191 FALSE         39.2
+156    14      8 292 201 FALSE         57.1
+157    14      8 292 211 FALSE         50.8
+158    14      8 292 221 FALSE         54.3
+159    14      8 292 232 FALSE         51.9
+160    14      8 292 242 FALSE         51.0
+161    14      8 292 252 FALSE         42.9
+162    14      8 292 262 FALSE         50.9
+163    14      8 292 273 FALSE         51.9
+164    14      8 292 283 FALSE         53.8
+165    14      8 292 293 FALSE         50.0
+166    14      8 292 303 FALSE         52.0
+167     2      8 297 313 FALSE            -
+168     2      8 297 324 FALSE            -
+169     2      8 297 334 FALSE            -
+170     2      8 297 344 FALSE            -
+171     2      8 297 354 FALSE            -
+172     2      8 297 364 FALSE            -
+173     2      8 297 375 FALSE            -
+174     2      8 297 385 FALSE            -
+175     2      8 297 395 FALSE            -
+176     2      8 297 405 FALSE            -
+177     2      8 297 415 FALSE            -
+178     2      8 297 426 FALSE            -
+179     4      9 457 282 FALSE         0700
+180    14      8 243 191 FALSE         39.2
+181    14      8 243 201 FALSE         41.3
+182    14      8 243 211 FALSE         44.9
+183    14      8 243 221 FALSE         45.7
+184    14      8 243 232 FALSE         45.6
+185    14      8 243 242 FALSE         43.6
+186    14      8 243 252 FALSE         42.9
+187    14      8 243 262 FALSE         45.9
+188    14      8 243 273 FALSE         45.7
+189    14      8 243 283 FALSE         48.2
+190    14      8 243 293 FALSE         44.4
+191    14      8 243 303 FALSE         45.4
+192    14      8 243 313 FALSE         49.9
+193    14      8 243 324 FALSE         51.3
+194    14      8 243 334 FALSE         51.2
+195    14      8 243 344 FALSE         53.5
+196    14      8 243 354 FALSE         53.2
+197    14      8 243 364 FALSE         51.9
+198    14      8 243 375 FALSE         52.3
+199    14      8 243 385 FALSE         53.4
+200    14      8 243 395 FALSE         49.9
+201    14      8 243 405 FALSE         50.7
+202    14      8 243 415 FALSE         51.6
+203    14      8 243 426 FALSE         54.8
+204     4      9 469 418 FALSE         0800
+205     2      8 194 191 FALSE            -
+206    14      8 189 201 FALSE         56.9
+207    14      8 189 211 FALSE         49.6
+208    14      8 189 221 FALSE         53.7
+209    14      8 189 232 FALSE         50.8
+210    14      8 189 242 FALSE         50.1
+211     2      8 194 252 FALSE            -
+212    14      8 189 262 FALSE         49.3
+213    14      8 189 273 FALSE         50.8
+214    14      8 189 283 FALSE         52.6
+215    14      8 189 293 FALSE         48.7
+216    14      8 189 303 FALSE         51.0
+217    14      8 189 313 FALSE         53.4
+218    14      8 189 324 FALSE         61.6
+219    14      8 189 334 FALSE         53.9
+220    14      8 189 344 FALSE         58.8
+221     2      8 194 354 FALSE            -
+222     2      8 194 364 FALSE            -
+223     2      8 194 375 FALSE            -
+224     2      8 194 385 FALSE            -
+225     2      8 194 395 FALSE            -
+226     2      8 194 405 FALSE            -
+227     2      8 194 415 FALSE            -
+228    14      8 189 426 FALSE         67.5
+229     4      4 713 176 FALSE           12
+230     4      9 459 418 FALSE         0700
+231    14      8 138 191 FALSE         39.2
+232    14      8 138 201 FALSE         57.1
+233    14      8 138 211 FALSE         50.8
+234    14      8 138 221 FALSE         54.3
+235    14      8 138 232 FALSE         51.9
+236    14      8 138 242 FALSE         51.0
+237    14      8 138 252 FALSE         42.9
+238    14      8 138 262 FALSE         50.9
+239    14      8 138 273 FALSE         51.9
+240    14      8 138 283 FALSE         53.8
+241    14      8 138 293 FALSE         50.0
+242    14      8 138 303 FALSE         52.0
+243    14      8 138 313 FALSE         55.1
+244    14      8 138 324 FALSE         61.9
+245    14      8 138 334 FALSE         55.7
+246    14      8 138 344 FALSE         59.8
+247    14      8 138 354 FALSE         53.2
+248    14      8 138 364 FALSE         51.8
+249    14      8 138 375 FALSE         52.2
+250    14      8 138 385 FALSE         53.3
+251    14      8 138 395 FALSE         49.9
+252    14      8 138 405 FALSE         50.7
+253    14      8 138 415 FALSE         51.6
+254    14      8 138 426 FALSE         67.7
+255     4     10 435 236  TRUE        Noise
+256     4     10 435 224  TRUE        Level
+257     4     10 435 212 FALSE        (dBA)
+258     2      8 105 191 FALSE            -
+259     4      8 104 201 FALSE            3
+260     4      8 104 211 FALSE            3
+261     4      8 104 221 FALSE            3
+262     4      8 104 232 FALSE            3
+263     4      8 104 242 FALSE            1
+264     2      8 105 252 FALSE            -
+265     4      8 104 262 FALSE            3
+266     4      8 104 273 FALSE            3
+267     4      8 104 283 FALSE            8
+268     4      8 104 293 FALSE            3
+269     4      8 104 303 FALSE            5
+270     4      8 104 313 FALSE            3
+271     4      8 104 324 FALSE            5
+272     4      8 104 334 FALSE            4
+273     8      8 102 344 FALSE           12
+274     2      8 105 354 FALSE            -
+275     2      8 105 364 FALSE            -
+276     2      8 105 375 FALSE            -
+277     2      8 105 385 FALSE            -
+278     2      8 105 395 FALSE            -
+279     2      8 105 405 FALSE            -
+280     2      8 105 415 FALSE            -
+281     4      8 104 426 FALSE            2
+282    42     10 488 160  TRUE    Location:
+283    44     10 535 160  TRUE    Roodt/Syr
+284    20     10 589 160  TRUE          NMT
+285     5     10 612 160  TRUE            #
+286     5     10 620 160 FALSE            1
+287     7      4 443 176 FALSE          100
+288     4      5 721 212  TRUE           AC
+289     4     10 721 220  TRUE        Noise
+290     4     12 721 232 FALSE       Events
+291    29      8  36 191  TRUE     01/01/20
+292    14      8  72 191 FALSE         7:00
+293    29      8  36 201  TRUE     01/01/20
+294    14      8  72 201 FALSE         8:00
+295    29      8  36 211  TRUE     01/01/20
+296    14      8  72 211 FALSE         9:00
+297    29      8  36 221  TRUE     01/01/20
+298    18      8  69 221 FALSE        10:00
+299    29      8  36 232  TRUE     01/01/20
+300    18      8  69 232 FALSE        11:00
+301    29      8  36 242  TRUE     01/01/20
+302    18      8  69 242 FALSE        12:00
+303    29      8  36 252  TRUE     01/01/20
+304    18      8  72 252 FALSE        13:00
+305    29      8  36 262  TRUE     01/01/20
+306    18      8  72 262 FALSE        14:00
+307    29      8  36 273  TRUE     01/01/20
+308    18      8  72 273 FALSE        15:00
+309    29      8  36 283  TRUE     01/01/20
+310    18      8  72 283 FALSE        16:00
+311    29      8  36 293  TRUE     01/01/20
+312    18      8  72 293 FALSE        17:00
+313    29      8  36 303  TRUE     01/01/20
+314    18      8  72 303 FALSE        18:00
+315    29      8  36 313  TRUE     01/01/20
+316    18      8  72 313 FALSE        19:00
+317    29      8  36 324  TRUE     01/01/20
+318    18      8  72 324 FALSE        20:00
+319    29      8  36 334  TRUE     01/01/20
+320    18      8  72 334 FALSE        21:00
+321    29      8  36 344  TRUE     01/01/20
+322    18      8  69 344 FALSE        22:00
+323    29      8  36 354  TRUE     01/01/20
+324    18      8  69 354 FALSE        23:00
+325    29      8  36 364  TRUE     02/01/20
+326    14      8  69 364 FALSE         0:00
+327    29      8  36 375  TRUE     02/01/20
+328    14      8  72 375 FALSE         1:00
+329    29      8  36 385  TRUE     02/01/20
+330    14      8  72 385 FALSE         2:00
+331    29      8  36 395  TRUE     02/01/20
+332    14      8  72 395 FALSE         3:00
+333    29      8  36 405  TRUE     02/01/20
+334    14      8  72 405 FALSE         4:00
+335    29      8  36 415  TRUE     02/01/20
+336    14      8  72 415 FALSE         5:00
+337    29      8  36 426  TRUE     02/01/20
+338    14      8  72 426 FALSE         6:00
+339    30      9  91 157 FALSE     Aircraft
+340    20      9 380 158 FALSE        Total
+341    20      9 137 158 FALSE        Total
+342    49      9 227 158  TRUE   Background
+343    20      9 279 158  TRUE        Total
+344    20      9 301 158  TRUE         LDay
+345    20      9 334 158 FALSE        Total
+346    30      9 181 158 FALSE     Aircraft
+347    27      9  93 167  TRUE       Events
+348    23      9 128 167  TRUE         LDEN
+349    11      9 154 167  TRUE           dB
+350    23      9 172 168  TRUE         LDEN
+351    23      9 198 168  TRUE        dB(A)
+352    23      9 227 168  TRUE         LDEN
+353    23      9 253 168 FALSE        dB(A)
+354    38      9 325 168  TRUE     LEvening
+355    26      9 370 167  TRUE       LNight
+356    11      9 399 167 FALSE           dB
+357    23      9 289 168 FALSE        dB(A)
+358    11      9 384 177 FALSE          (A)
+359    11      9 141 177 FALSE          (A)
+360    23      9 333 177 FALSE        dB(A)
+361     4     11 437 375  TRUE        Noise
+362     4     10 437 363  TRUE        Level
+363     4     11 437 350 FALSE        (dBA)
+364    15      9  40 157 FALSE          Day</code></pre>
+</div>
+</div>
+</section>
+<section id="a-new-problem" class="slide level2">
+<h2>A new problem?</h2>
+<p>We now have a list of individual words with cartesian coordinates.</p>
+<p>It’s going to be possible but a lot of work to parse.</p>
+<p>A good <strong>strategy</strong> would be to break the space into areas of interest to omit the ‘garbage’.</p>
+<p>If only there was a magical program to help us understand the PDF coordinate system…</p>
+</section>
+<section id="attack-strategy-fruit-ninja" class="slide level2">
+<h2>Attack strategy ‘Fruit Ninja’</h2>
+
+<img data-src="imgs/pdf_example.png" title="A screenshot of a PDF page with headings, a table, and graphs" class="r-stretch"></section>
+<section id="inkscape" class="slide level2">
+<h2>Inkscape!</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p>The solution, as in most cases, is using Inkscape to find the the ‘box’ of data that interests us.</p>
+<p>By setting the ruler (right-click) or coordinate units to <strong>pt</strong> (points) you see the same units reported in R.</p>
+<p><img data-src="imgs/inkscape_title.png" title="An orange box around the location text of interest with the Inkscape coordinates shown above"></p>
+</div><div class="column" style="width:50%;">
+<p><img data-src="imgs/xy_wh_close_up.png" title="A close up of input boxes for x and y coordinates and width and height of element" style="width:100.0%"></p>
+<p><img data-src="imgs/inkscape_table.png" title="A table with an orange box around it and the rectangle's coordinates above as well as width and height in pt units"></p>
+</div>
+</div>
+</section>
+<section id="section" class="slide level2">
+<h2></h2>
+</section>
+<section id="bullets" class="slide level2">
+<h2>Bullets</h2>
+<p>When you click the <strong>Render</strong> button a document will be generated that includes:</p>
+<ul>
+<li>Content authored with markdown</li>
+<li>Output from executable code</li>
+</ul>
+</section>
+<section id="code" class="slide level2">
+<h2>Code</h2>
+<p>When you click the <strong>Render</strong> button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2</code></pre>
+</div>
+</div>
+<div class="footer footer-default">
+
+</div>
+</section>
+    </div>
+  </div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="presentation_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="presentation_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="presentation_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="presentation_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="presentation_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="presentation_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="presentation_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="presentation_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="presentation_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="presentation_files/libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': false,
+'smaller': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: false,
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1050,
+
+        height: 700,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        math: {
+          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    
+    <script>
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+      // slide changes (different for each slide format).
+      (function () {
+        // dispatch for htmlwidgets
+        function fireSlideEnter() {
+          const event = window.document.createEvent("Event");
+          event.initEvent("slideenter", true, true);
+          window.document.dispatchEvent(event);
+        }
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+          fireSlideEnter();
+
+          // dispatch for shiny
+          if (window.jQuery) {
+            if (previousSlide) {
+              window.jQuery(previousSlide).trigger("hidden");
+            }
+            if (currentSlide) {
+              window.jQuery(currentSlide).trigger("shown");
+            }
+          }
+        }
+
+        // hookup for slidy
+        if (window.w3c_slidy) {
+          window.w3c_slidy.add_observer(function (slide_num) {
+            // slide_num starts at position 1
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+          });
+        }
+
+      })();
+    </script>
+
+    <script id="quarto-html-after-body" type="application/javascript">
+    window.document.addEventListener("DOMContentLoaded", function (event) {
+      const toggleBodyColorMode = (bsSheetEl) => {
+        const mode = bsSheetEl.getAttribute("data-mode");
+        const bodyEl = window.document.querySelector("body");
+        if (mode === "dark") {
+          bodyEl.classList.add("quarto-dark");
+          bodyEl.classList.remove("quarto-light");
+        } else {
+          bodyEl.classList.add("quarto-light");
+          bodyEl.classList.remove("quarto-dark");
+        }
+      }
+      const toggleBodyColorPrimary = () => {
+        const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+        if (bsSheetEl) {
+          toggleBodyColorMode(bsSheetEl);
+        }
+      }
+      toggleBodyColorPrimary();  
+      const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+      tabsets.forEach(function(tabset) {
+        const tabby = new Tabby('#' + tabset.id);
+      });
+      const isCodeAnnotation = (el) => {
+        for (const clz of el.classList) {
+          if (clz.startsWith('code-annotation-')) {                     
+            return true;
+          }
+        }
+        return false;
+      }
+      const clipboard = new window.ClipboardJS('.code-copy-button', {
+        text: function(trigger) {
+          const codeEl = trigger.previousElementSibling.cloneNode(true);
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+        }
+      });
+      clipboard.on('success', function(e) {
+        // button target
+        const button = e.trigger;
+        // don't keep focus
+        button.blur();
+        // flash "checked"
+        button.classList.add('code-copy-button-checked');
+        var currentTitle = button.getAttribute("title");
+        button.setAttribute("title", "Copied!");
+        let tooltip;
+        if (window.bootstrap) {
+          button.setAttribute("data-bs-toggle", "tooltip");
+          button.setAttribute("data-bs-placement", "left");
+          button.setAttribute("data-bs-title", "Copied!");
+          tooltip = new bootstrap.Tooltip(button, 
+            { trigger: "manual", 
+              customClass: "code-copy-button-tooltip",
+              offset: [0, -8]});
+          tooltip.show();    
+        }
+        setTimeout(function() {
+          if (tooltip) {
+            tooltip.hide();
+            button.removeAttribute("data-bs-title");
+            button.removeAttribute("data-bs-toggle");
+            button.removeAttribute("data-bs-placement");
+          }
+          button.setAttribute("title", currentTitle);
+          button.classList.remove('code-copy-button-checked');
+        }, 1000);
+        // clear code selection
+        e.clearSelection();
+      });
+      function tippyHover(el, contentFn) {
+        const config = {
+          allowHTML: true,
+          content: contentFn,
+          maxWidth: 500,
+          delay: 100,
+          arrow: false,
+          appendTo: function(el) {
+              return el.closest('section.slide') || el.parentElement;
+          },
+          interactive: true,
+          interactiveBorder: 10,
+          theme: 'light-border',
+          placement: 'bottom-start'
+        };
+          config['offset'] = [0,0];
+          config['maxWidth'] = 700;
+        window.tippy(el, config); 
+      }
+      const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+      for (var i=0; i<noterefs.length; i++) {
+        const ref = noterefs[i];
+        tippyHover(ref, function() {
+          // use id or data attribute instead here
+          let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+          try { href = new URL(href).hash; } catch {}
+          const id = href.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          return note.innerHTML;
+        });
+      }
+      const findCites = (el) => {
+        const parentEl = el.parentElement;
+        if (parentEl) {
+          const cites = parentEl.dataset.cites;
+          if (cites) {
+            return {
+              el,
+              cites: cites.split(' ')
+            };
+          } else {
+            return findCites(el.parentElement)
+          }
+        } else {
+          return undefined;
+        }
+      };
+      var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+      for (var i=0; i<bibliorefs.length; i++) {
+        const ref = bibliorefs[i];
+        const citeInfo = findCites(ref);
+        if (citeInfo) {
+          tippyHover(citeInfo.el, function() {
+            var popup = window.document.createElement('div');
+            citeInfo.cites.forEach(function(cite) {
+              var citeDiv = window.document.createElement('div');
+              citeDiv.classList.add('hanging-indent');
+              citeDiv.classList.add('csl-entry');
+              var biblioDiv = window.document.getElementById('ref-' + cite);
+              if (biblioDiv) {
+                citeDiv.innerHTML = biblioDiv.innerHTML;
+              }
+              popup.appendChild(citeDiv);
+            });
+            return popup.innerHTML;
+          });
+        }
+      }
+    });
+    </script>
+    
+
+</body></html>

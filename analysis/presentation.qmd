@@ -1,0 +1,71 @@
+---
+title: "Parsing PDFs"
+subtitle: "Strategies (with R)"
+author: "Cyrille Médard de Chardon"
+format: revealjs
+editor_options: 
+  chunk_output_type: console
+---
+
+## Problem
+
+![](imgs/pdf_example.png "A screenshot of a PDF page with headings, a table, and graphs")
+
+## The solution?
+
+```{r echo=TRUE}
+library(pdftools)
+all_pdf <- pdf_data('imgs/2020-byhour_page1.pdf')
+print(all_pdf[[1]])
+```
+
+## A new problem?
+
+We now have a list of individual words with cartesian coordinates.
+
+It's going to be possible but a lot of work to parse.
+
+A good **strategy** would be to break the space into areas of interest to omit the 'garbage'.
+
+If only there was a magical program to help us understand the PDF coordinate system...
+
+## Attack strategy 'Fruit Ninja'
+
+![](imgs/pdf_example.png "A screenshot of a PDF page with headings, a table, and graphs")
+
+## Inkscape!
+
+:::: {.columns}
+::: {.column width="50%"}
+The solution, as in most cases, is using Inkscape to find the the 'box' of data that interests us.
+
+By setting the ruler (right-click) or coordinate units to **pt** (points) you see the same units reported in R.
+
+![](imgs/inkscape_title.png "An orange box around the location text of interest with the Inkscape coordinates shown above")
+:::
+
+::: {.column width="50%"}
+![](imgs/xy_wh_close_up.png "A close up of input boxes for x and y coordinates and width and height of element"){width="100%"}
+
+![](imgs/inkscape_table.png "A table with an orange box around it and the rectangle's coordinates above as well as width and height in pt units")
+:::
+::::
+
+## 
+
+
+## Bullets
+
+When you click the **Render** button a document will be generated that includes:
+
+-   Content authored with markdown
+-   Output from executable code
+
+## Code
+
+When you click the **Render** button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
