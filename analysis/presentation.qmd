@@ -2,70 +2,274 @@
 title: "Parsing PDFs"
 subtitle: "Strategies (with R)"
 author: "Cyrille Médard de Chardon"
-format: revealjs
+format:
+  revealjs:
+    width: 1920
+    height: 1080
 editor_options: 
   chunk_output_type: console
 ---
 
-## Problem
+## Problem ~ 1500 pages like this
+![](imgs/pdf_example.png "A screenshot of a PDF page with headings, a table, and graphs"){width=100%}
+Source: [Administration de la Navigation Aérienne](https://data.public.lu/fr/datasets/archives-bruit-des-avions/)
 
-![](imgs/pdf_example.png "A screenshot of a PDF page with headings, a table, and graphs")
-
-## The solution?
-
+## One solution (using R)
 ```{r echo=TRUE}
 library(pdftools)
 all_pdf <- pdf_data('imgs/2020-byhour_page1.pdf')
 print(all_pdf[[1]])
 ```
 
+## How is the data structured?
+The origin **here** is in the top left.
+PDFs have nested boxes that can be rotated - origin can be elsewhere.
+
+```{r echo=FALSE}
+df <- as.data.frame(all_pdf[[1]])
+par(mar=c(4.1, 4.1, 0.5,0))
+plot(df$x, df$y, pch='.', ylim=c(max(df$y), min(df$y)), xlim=c(0, max(df$x) + 50))
+text(df$x, df$y, labels = df$text, pos = 4, cex=0.8)
+```
+
 ## A new problem?
+We now have a list of individual words with their Cartesian coordinates.
 
-We now have a list of individual words with cartesian coordinates.
+It's going to be possible but some work to parse into clean data.
 
-It's going to be possible but a lot of work to parse.
-
-A good **strategy** would be to break the space into areas of interest to omit the 'garbage'.
-
-If only there was a magical program to help us understand the PDF coordinate system...
+A good **strategy** would be to break the space into areas of interest, and omit the 'garbage'.
 
 ## Attack strategy 'Fruit Ninja'
-
+:::: {.columns}
+::: {.column width="70%"}
 ![](imgs/pdf_example.png "A screenshot of a PDF page with headings, a table, and graphs")
+:::
+::: {.column width="30%"}
+Need to determine target bounds!
+
+If only there was a magical program to help us understand the PDF coordinate system.
+:::
+::::
 
 ## Inkscape!
-
 :::: {.columns}
 ::: {.column width="50%"}
-The solution, as in most cases, is using Inkscape to find the the 'box' of data that interests us.
+The solution, as in most cases, is using Inkscape.
+
+Here to find the the 'box' of data that interests us.
 
 By setting the ruler (right-click) or coordinate units to **pt** (points) you see the same units reported in R.
 
-![](imgs/inkscape_title.png "An orange box around the location text of interest with the Inkscape coordinates shown above")
+![](imgs/inkscape_title.png "An orange box around the location text of interest with the Inkscape coordinates shown above"){width="100%"}
 :::
 
 ::: {.column width="50%"}
 ![](imgs/xy_wh_close_up.png "A close up of input boxes for x and y coordinates and width and height of element"){width="100%"}
 
-![](imgs/inkscape_table.png "A table with an orange box around it and the rectangle's coordinates above as well as width and height in pt units")
+![](imgs/inkscape_table.png "A table with an orange box around it and the rectangle's coordinates above as well as width and height in pt units"){width="100%"}
 :::
 ::::
 
-## 
+## It's not perfect
+PDFs use points, which are defined as 1/72 of an inch.
 
+Below shows the offset between the expected location coordinates and the actual.
 
-## Bullets
+![](imgs/2020-byhour_page1.svg){width="100%"}
 
-When you click the **Render** button a document will be generated that includes:
-
--   Content authored with markdown
--   Output from executable code
-
-## Code
-
-When you click the **Render** button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:
-
+## With a little tweaking, it works
 ```{r}
-1 + 1
+extractPanel <- function(df, ytlim, xrlim, yblim, xllim) {
+  # return all the items that fall within the bounds
+
+  # if passed a tibble, convert to vanilla df
+  if ( class(df)[1] == "tbl_df" ) {
+    df <- as.data.frame(df)
+  }
+  
+  # if it's something else, like a list, die
+  if ( class(df)[1] != "data.frame" ) {
+    stop(paste("extractPanel needs a data.frame not a", class(df)))
+  }
+  
+  # spatially subset
+  sub_df <- df[df$x > xllim & (df$x + df$width) < xrlim & df$y > ytlim & (df$y + df$height) < yblim,]
+  
+  # order based on
+  ord_sub_df <- sub_df[order(sub_df$y, sub_df$x), ]
+  
+  # return it
+  return(ord_sub_df)
+}
+fixRows <- function(df) {
+  # get the table row count
+  table_row_counts <- sum(df$space)
+  # cluster
+  ci <- classify_intervals(df$y, table_row_counts, style="jenks")
+  
+  # overwrite the y values within each group
+  fixed_df <- do.call('rbind', lapply(split(df, ci), function(g) {
+    g$y <- median(g$y)
+    return(g)
+  }))
+  
+  return(fixed_df)
+}
+
+df <- extractPanel(all_pdf[[1]], ytlim=177, xrlim=436, yblim=443, xllim=33)
+par(mar=c(4.1, 4.1, 0,0))
+plot(df$x, df$y, pch='.', ylim=c(max(df$y), min(df$y)), xlim=c(0, max(df$x) + 50))
+text(df$x, df$y, labels = df$text, pos = 4, cex=0.8)
+
 ```
 
+## There's another problem
+Text on a line - is not on the exact same y coordinate.  
+It's often off by 1 or 2.
+
+```{r}
+dfs <- df[order(df$y, df$x),]
+print(dfs[dfs$y > 261 & dfs$y < 264,])
+```
+
+We can cluster the y-coordinate values, but it's helpful if we know the number of rows.
+
+## Cluster into rows
+```{r}
+library(classInt)
+# kmeans is unreliable
+# get the table row count (trc)
+trc <- sum(dfs$space)
+
+clust_rslt <- sapply(2:(trc + 5), function(i) {
+  # find the natural breaks
+  ci <- classify_intervals(dfs$y, i, style="jenks")
+  # get the within groups root-square-mean-error, then that mean
+  mean(sapply(split(dfs$y, ci), function(x) { sqrt(sum((x - mean(x))^2)) }))
+})
+# make nice
+rslts <- data.frame(gwgm=clust_rslt, groups=2:29)
+
+par(mar=c(4.1, 4.1, 0,0))
+plot(rslts$groups, rslts$gwgm, log = 'y', ylab="Log Mean of within group means", xlab="Number of clusters")
+abline(v=trc, lty=2)
+```
+
+## Results
+:::: {.columns}
+::: {.column width="50%"}
+
+Table of value frequencies (abridged), before classification/clustering:
+```{r}
+print(table(dfs$y)[1:17])
+```
+
+After (abridged):
+
+```{r}
+frdfs <- fixRows(dfs)
+print(table(frdfs$y)[1:17])
+```
+
+The rows (y coordinates) have been harmonized.
+
+:::
+::: {.column width="50%"}
+
+We now have cleaned data.
+
+```{r}
+csv_data <- data.frame(t(sapply(split(frdfs$text, frdfs$y), rbind)))[,1:6]
+colnames(csv_data) <- c('date', 'hour', 'ac_events', 'total_LDEN_dB', 'ac_LDEN_dB', 'bg_LDEN_dB')
+print(csv_data)
+```
+
+::: 
+::::
+
+## Other tools/libraries
+
+Surely there's a few other libraries that do this. Yes!
+
+- [PDE](https://cran.r-project.org/web/packages/PDE/vignettes/PDE.html): Has a GUI, requires additional libraries (PDE, xpdf)
+- [Tabulizer](https://blog.djnavarro.net/posts/2023-06-16_tabulizer/): Looks impressive, requires JRE and many libraries.
+- Other similar [approach](https://crimebythenumbers.com/scrape-table.html) exist as well.
+
+So why did I do this?
+
+Well at first I thought it would be simple (until it wasn't).
+
+## The data
+```{r, echo=FALSE}
+pp <- read.table(file = '../export_csv/2020_airport_noise_data2.csv', header=TRUE)
+
+# split into sites
+pps <- split(pp, pp$location)
+
+aeci <- classIntervals(unique(pp$aircraft_LDEN_dB), 7, style="jenks")
+mypal <- c('#fee5d9','#fcbba1','#fc9272','#fb6a4a','#ef3b2c','#cb181d','#99000d')
+#findColours(aeci, mypal)
+
+
+# for each site get the planes over time
+par(mar=c(4.1, 4.1, 0.1, 0.1), mfrow=c(2,2))
+garbage <- sapply(pps, function(site) {
+  #site <- pps[[1]]
+  sdl <- split(site, site$date)
+  
+  # get just one column/value
+  adb <- sapply(sdl, function(x) { x$aircraft_LDEN_dB})
+  bgdb <- sapply(sdl, function(x) { x$bg_LDEN_dB})
+  tdb <- sapply(sdl, function(x) { x$total_LDEN_dB})
+
+  # only keep those with 24 hours
+  adb24 <- adb[sapply(adb, length) == 24]
+  bgdb24 <- bgdb[sapply(bgdb, length) == 24]
+  tdb24 <- tdb[sapply(tdb, length) == 24]
+  
+  # get the daily mean for the year
+  adb24mean <- colMeans(do.call('rbind', adb24), na.rm = TRUE)
+  bgdb24mean <- colMeans(do.call('rbind', bgdb24), na.rm = TRUE)
+  tdb24mean <- colMeans(do.call('rbind', tdb24), na.rm = TRUE)
+  
+  # plot it
+  plot(tdb24mean, type='l', xlab="Time of day", ylab="Aeroplane noise (dB) - hourly yearly mean", ylim=c(0, max(adb24mean)), lwd=2 )
+  lines(adb24mean, col=2, lwd=2)
+  lines(bgdb24mean, col=3, lwd=2)
+  
+  abline(h=c(10,20,30,60,70), lty=2, col="grey")
+  text(rep(13, 5), y = c(10, 20, 30, 60, 70), labels = c("Normal breathing", "Ticking watch", "Soft whisper", "Normal conversation", "Prolonged noise damages ears"))
+  
+  legend("bottomright", legend = c("Aircraft noise", "Ambient noise", "Combined noise"), lwd=2, col=c(2,3,1), title = site$location[1])
+})
+
+```
+
+"Noise above 70 dB over a prolonged period of time may start to damage your hearing. Loud noise above 120 dB can cause immediate harm to your ears."  
+- [CDC](https://www.cdc.gov/nceh/hearing_loss/what_noises_cause_hearing_loss.html)
+
+## Relationship between events and noise
+```{r}
+par(mar=c(4.1, 4.1, 0.1, 0.1))
+plot(jitter(pp$aircraft_events, factor = 2.4), pp$aircraft_LDEN_dB, pch=19, cex=0.3, xlab="Hourly aircraft events", ylab="Hourly noise (dB) from aircrafts", col=as.factor(pp$location))
+legend("bottomrigh", legend = unique(pp$location), fill=factor(unique(pp$location)))
+
+```
+
+I'm not sure where the locations are exactly.
+
+## Conclusion
+
+:::: {.columns}
+::: {.column width="50%"}
+### Next steps
+- Process the other years of data (2012-2021)
+- Analyze the data
+:::
+
+::: {.column width="50%"}
+### PDFS
+- Relatively easy to parse (here)
+- A nice visual and methodologically interesting task
+:::
+::::

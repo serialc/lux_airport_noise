@@ -4,10 +4,91 @@
 
 #install.packages('pdftools')
 library(pdftools)
-library(dplyr) 
+library(classInt)
 
 # retrieve the pdf_data
 all_pdf <- pdf_data('../source_pdfs/2020-byhour.pdf')
+
+extractPanel <- function(df, ytlim, xrlim, yblim, xllim) {
+  # return all the items that fall within the bounds
+
+  # if passed a tibble, convert to vanilla df
+  if ( class(df)[1] == "tbl_df" ) {
+    df <- as.data.frame(df)
+  }
+  
+  # if it's something else, like a list, die
+  if ( class(df)[1] != "data.frame" ) {
+    stop(paste("extractPanel needs a data.frame not a", class(df)))
+  }
+  
+  # spatially subset
+  sub_df <- df[  df$x > xllim &
+                 (df$x + df$width) < xrlim &
+                 df$y > ytlim &
+                 (df$y + df$height) < yblim,]
+  
+  # order based on
+  ord_sub_df <- sub_df[order(sub_df$y, sub_df$x), ]
+  
+  # return it
+  return(ord_sub_df)
+}
+fixRows <- function(df) {
+  # get the table row count
+  table_row_counts <- sum(df$space)
+  # otherwise another method would be better
+  
+  # cluster
+  ci <- classify_intervals(df$y, table_row_counts, style="jenks")
+  
+  # overwrite the y values within each group
+  fixed_df <- do.call('rbind', lapply(split(df, ci), function(g) {
+    g$y <- median(g$y)
+    return(g)
+  }))
+  
+  return(fixed_df)
+}
+
+cln_pdf <- lapply(all_pdf, function(apdf) {
+  #apdf <- all_pdf[[3]]
+  apdf <- as.data.frame(apdf)
+
+  # get the table
+  ndata <- extractPanel(apdf, ytlim=172, xrlim=436, yblim=443, xllim=33)
+  
+  # cluster the rows
+  fndata <- fixRows(ndata)
+
+  # get the location
+  nloc <- extractPanel(apdf, ytlim=140, yblim=160, xllim=500, xrlim=800)
+  
+  # add it to the table
+  locstr <- paste(nloc$text[2:nrow(nloc)], collapse=" ")
+  
+  # only want the date-time and aircraft count, env. noise, aircraft noise
+  fndf <- data.frame(t(sapply(split(fndata, fndata$y), function(drow) {
+    #drow <- split(fndata, fndata$y)[[1]]
+    drow$text
+  }))[,1:6])
+  colnames(fndf) <- c('date', 'hour', 'aircraft_events', 'total_LDEN_dB', 'aircraft_LDEN_dB', 'bg_LDEN_dB')
+  fndf$site <- locstr
+
+  # replace empty with NA
+  fndf[fndf == '-'] <- NA
+    
+  return(fndf)
+})
+
+pp <- do.call('rbind', cln_pdf)
+
+write.table(pp, file = '../export_csv/2020_airport_noise_data2.csv', row.names = FALSE)
+
+# save to csv file
+
+#### OLD code ####
+# take the alternative homogenization method and add to my function
 
 processed_pages <- lapply(all_pdf, function(pdf_page) {
   # convert to data.frame - and we only are doing the first page for now
@@ -120,14 +201,14 @@ pp <- do.call('rbind', processed_pages)
 write.table(pp, file = '../export_csv/2020_airport_noise_data.csv', row.names = FALSE)
 
 #### Visualize data for 2020 ####
-read.table(file = '../export_csv/2020_airport_noise_data.csv')
+read.table(file = '../export_csv/2020_airport_noise_data.csv', header = TRUE)
 
 pps <- split(pp, pp$location)
 
 sapply(pps, function(sites) {
   #site <- pps[[1]]
   # only keep those with the magic number of rows - 24
-  sapply(site$aircraft_events, nrow)
+  site$aircraft_events
   do.call('rbind', split(site$aircraft_events, site$date))
 })
 sapply(split(pp$aircraft_events, pp$date), nrow)

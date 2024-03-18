@@ -402,12 +402,12 @@ Cyrille Médard de Chardon
 </div>
 
 </section>
-<section id="problem" class="slide level2">
-<h2>Problem</h2>
-
-<img data-src="imgs/pdf_example.png" title="A screenshot of a PDF page with headings, a table, and graphs" class="r-stretch"></section>
-<section id="the-solution" class="slide level2">
-<h2>The solution?</h2>
+<section id="problem-1500-pages-like-this" class="slide level2">
+<h2>Problem ~ 1500 pages like this</h2>
+<p><img data-src="imgs/pdf_example.png" title="A screenshot of a PDF page with headings, a table, and graphs" style="width:100.0%"> Source: <a href="https://data.public.lu/fr/datasets/archives-bruit-des-avions/">Administration de la Navigation Aérienne</a></p>
+</section>
+<section id="one-solution-using-r" class="slide level2">
+<h2>One solution (using R)</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">library</span>(pdftools)</span>
 <span id="cb1-2"><a href="#cb1-2"></a>all_pdf <span class="ot">&lt;-</span> <span class="fu">pdf_data</span>(<span class="st">'imgs/2020-byhour_page1.pdf'</span>)</span>
@@ -781,47 +781,168 @@ Cyrille Médard de Chardon
 </div>
 </div>
 </section>
+<section id="how-is-the-data-structured" class="slide level2">
+<h2>How is the data structured?</h2>
+<p>The origin <strong>here</strong> is in the top left. PDFs have nested boxes that can be rotated - origin can be elsewhere.</p>
+
+<img data-src="presentation_files/figure-revealjs/unnamed-chunk-2-1.png" width="960" class="r-stretch"></section>
 <section id="a-new-problem" class="slide level2">
 <h2>A new problem?</h2>
-<p>We now have a list of individual words with cartesian coordinates.</p>
-<p>It’s going to be possible but a lot of work to parse.</p>
-<p>A good <strong>strategy</strong> would be to break the space into areas of interest to omit the ‘garbage’.</p>
-<p>If only there was a magical program to help us understand the PDF coordinate system…</p>
+<p>We now have a list of individual words with their Cartesian coordinates.</p>
+<p>It’s going to be possible but some work to parse into clean data.</p>
+<p>A good <strong>strategy</strong> would be to break the space into areas of interest, and omit the ‘garbage’.</p>
 </section>
 <section id="attack-strategy-fruit-ninja" class="slide level2">
 <h2>Attack strategy ‘Fruit Ninja’</h2>
-
-<img data-src="imgs/pdf_example.png" title="A screenshot of a PDF page with headings, a table, and graphs" class="r-stretch"></section>
+<div class="columns">
+<div class="column" style="width:70%;">
+<p><img data-src="imgs/pdf_example.png" title="A screenshot of a PDF page with headings, a table, and graphs"></p>
+</div><div class="column" style="width:30%;">
+<p>Need to determine target bounds!</p>
+<p>If only there was a magical program to help us understand the PDF coordinate system.</p>
+</div>
+</div>
+</section>
 <section id="inkscape" class="slide level2">
 <h2>Inkscape!</h2>
 <div class="columns">
 <div class="column" style="width:50%;">
-<p>The solution, as in most cases, is using Inkscape to find the the ‘box’ of data that interests us.</p>
+<p>The solution, as in most cases, is using Inkscape.</p>
+<p>Here to find the the ‘box’ of data that interests us.</p>
 <p>By setting the ruler (right-click) or coordinate units to <strong>pt</strong> (points) you see the same units reported in R.</p>
-<p><img data-src="imgs/inkscape_title.png" title="An orange box around the location text of interest with the Inkscape coordinates shown above"></p>
+<p><img data-src="imgs/inkscape_title.png" title="An orange box around the location text of interest with the Inkscape coordinates shown above" style="width:100.0%"></p>
 </div><div class="column" style="width:50%;">
 <p><img data-src="imgs/xy_wh_close_up.png" title="A close up of input boxes for x and y coordinates and width and height of element" style="width:100.0%"></p>
-<p><img data-src="imgs/inkscape_table.png" title="A table with an orange box around it and the rectangle's coordinates above as well as width and height in pt units"></p>
+<p><img data-src="imgs/inkscape_table.png" title="A table with an orange box around it and the rectangle's coordinates above as well as width and height in pt units" style="width:100.0%"></p>
 </div>
 </div>
 </section>
-<section id="section" class="slide level2">
-<h2></h2>
-</section>
-<section id="bullets" class="slide level2">
-<h2>Bullets</h2>
-<p>When you click the <strong>Render</strong> button a document will be generated that includes:</p>
-<ul>
-<li>Content authored with markdown</li>
-<li>Output from executable code</li>
-</ul>
-</section>
-<section id="code" class="slide level2">
-<h2>Code</h2>
-<p>When you click the <strong>Render</strong> button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:</p>
+<section id="its-not-perfect" class="slide level2">
+<h2>It’s not perfect</h2>
+<p>PDFs use points, which are defined as 1/72 of an inch.</p>
+<p>Below shows the offset between the expected location coordinates and the actual.</p>
+
+<img data-src="imgs/2020-byhour_page1.svg" style="width:100.0%" class="r-stretch"></section>
+<section id="with-a-little-tweaking-it-works" class="slide level2">
+<h2>With a little tweaking, it works</h2>
+
+<img data-src="presentation_files/figure-revealjs/unnamed-chunk-3-1.png" width="960" class="r-stretch"></section>
+<section id="theres-another-problem" class="slide level2">
+<h2>There’s another problem</h2>
+<p>Text on a line - is not on the exact same y coordinate.<br>
+It’s often off by 1 or 2.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
+<pre><code>    width height   x   y space     text
+305    29      8  36 262  TRUE 01/01/20
+306    18      8  72 262 FALSE    14:00
+265     4      8 104 262 FALSE        3
+238    14      8 138 262 FALSE     50.9
+212    14      8 189 262 FALSE     49.3
+187    14      8 243 262 FALSE     45.9
+162    14      8 292 262 FALSE     50.9
+137     2      8 341 263 FALSE        -
+112     2      8 388 263 FALSE        -</code></pre>
+</div>
+</div>
+<p>We can cluster the y-coordinate values, but it’s helpful if we know the number of rows.</p>
+</section>
+<section id="cluster-into-rows" class="slide level2">
+<h2>Cluster into rows</h2>
+
+<img data-src="presentation_files/figure-revealjs/unnamed-chunk-5-1.png" width="960" class="r-stretch"></section>
+<section id="results" class="slide level2">
+<h2>Results</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p>Table of value frequencies (abridged), before classification/clustering:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+191 192 201 202 211 212 221 222 232 242 243 252 253 262 263 273 283 
+  8   1   8   1   7   2   7   2   9   8   1   8   1   7   2   9   9 </code></pre>
+</div>
+</div>
+<p>After (abridged):</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+191 201 211 221 232 242 252 262 273 283 293 303 313 324 334 344 354 
+  9   9   9   9   9   9   9   9   9   9   9   9   9   9   9   9   9 </code></pre>
+</div>
+</div>
+<p>The rows (y coordinates) have been harmonized.</p>
+</div><div class="column" style="width:50%;">
+<p>We now have cleaned data.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>        date  hour ac_events total_LDEN_dB ac_LDEN_dB bg_LDEN_dB
+191 01/01/20  7:00         -          39.2          -       39.2
+201 01/01/20  8:00         3          57.1       56.9       41.3
+211 01/01/20  9:00         3          50.8       49.6       44.9
+221 01/01/20 10:00         3          54.3       53.7       45.7
+232 01/01/20 11:00         3          51.9       50.8       45.6
+242 01/01/20 12:00         1          51.0       50.1       43.6
+252 01/01/20 13:00         -          42.9          -       42.9
+262 01/01/20 14:00         3          50.9       49.3       45.9
+273 01/01/20 15:00         3          51.9       50.8       45.7
+283 01/01/20 16:00         8          53.8       52.6       48.2
+293 01/01/20 17:00         3          50.0       48.7       44.4
+303 01/01/20 18:00         5          52.0       51.0       45.4
+313 01/01/20 19:00         3          55.1       53.4       49.9
+324 01/01/20 20:00         5          61.9       61.6       51.3
+334 01/01/20 21:00         4          55.7       53.9       51.2
+344 01/01/20 22:00        12          59.8       58.8       53.5
+354 01/01/20 23:00         -          53.2          -       53.2
+364 02/01/20  0:00         -          51.8          -       51.9
+375 02/01/20  1:00         -          52.2          -       52.3
+385 02/01/20  2:00         -          53.3          -       53.4
+395 02/01/20  3:00         -          49.9          -       49.9
+405 02/01/20  4:00         -          50.7          -       50.7
+415 02/01/20  5:00         -          51.6          -       51.6
+426 02/01/20  6:00         2          67.7       67.5       54.8</code></pre>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="other-toolslibraries" class="slide level2">
+<h2>Other tools/libraries</h2>
+<p>Surely there’s a few other libraries that do this. Yes!</p>
+<ul>
+<li><a href="https://cran.r-project.org/web/packages/PDE/vignettes/PDE.html">PDE</a>: Has a GUI, requires additional libraries (PDE, xpdf)</li>
+<li><a href="https://blog.djnavarro.net/posts/2023-06-16_tabulizer/">Tabulizer</a>: Looks impressive, requires JRE and many libraries.</li>
+<li>Other similar <a href="https://crimebythenumbers.com/scrape-table.html">approach</a> exist as well.</li>
+</ul>
+<p>So why did I do this?</p>
+<p>Well at first I thought it would be simple (until it wasn’t).</p>
+</section>
+<section id="the-data" class="slide level2">
+<h2>The data</h2>
+
+<img data-src="presentation_files/figure-revealjs/unnamed-chunk-9-1.png" width="960" class="r-stretch"><p>“Noise above 70 dB over a prolonged period of time may start to damage your hearing. Loud noise above 120 dB can cause immediate harm to your ears.”<br>
+- <a href="https://www.cdc.gov/nceh/hearing_loss/what_noises_cause_hearing_loss.html">CDC</a></p>
+</section>
+<section id="relationship-between-events-and-noise" class="slide level2">
+<h2>Relationship between events and noise</h2>
+
+<img data-src="presentation_files/figure-revealjs/unnamed-chunk-10-1.png" width="960" class="r-stretch"><p>I’m not sure where the locations are exactly.</p>
+</section>
+<section id="conclusion" class="slide level2">
+<h2>Conclusion</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<h3 id="next-steps">Next steps</h3>
+<ul>
+<li>Process the other years of data (2012-2021)</li>
+<li>Analyze the data</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<h3 id="pdfs">PDFS</h3>
+<ul>
+<li>Relatively easy to parse (here)</li>
+<li>A nice visual and methodologically interesting task</li>
+</ul>
 </div>
 </div>
 <div class="footer footer-default">
@@ -1005,9 +1126,9 @@ Cyrille Médard de Chardon
         // The "normal" size of the presentation, aspect ratio will be preserved
         // when the presentation is scaled to fit different resolutions. Can be
         // specified using percentage units.
-        width: 1050,
+        width: 1920,
 
-        height: 700,
+        height: 1080,
 
         // Factor of the display size that should remain empty around the content
         margin: 0.1,
