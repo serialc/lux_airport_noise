@@ -402,9 +402,10 @@ Cyrille Médard de Chardon
 </div>
 
 </section>
-<section id="problem-1500-pages-like-this" class="slide level2">
-<h2>Problem ~ 1500 pages like this</h2>
-<p><img data-src="imgs/pdf_example.png" title="A screenshot of a PDF page with headings, a table, and graphs" style="width:100.0%"> Source: <a href="https://data.public.lu/fr/datasets/archives-bruit-des-avions/">Administration de la Navigation Aérienne</a></p>
+<section id="problem-12200-pages-over-8-years-of-data" class="slide level2">
+<h2>Problem: 12,200+ pages (over 8 years of data)</h2>
+<p><img data-src="imgs/pdf_example.png" title="A screenshot of a PDF page with headings, a table, and graphs" style="width:70.0%"><br>
+Source: <a href="https://data.public.lu/fr/datasets/archives-bruit-des-avions/">Administration de la Navigation Aérienne</a></p>
 </section>
 <section id="one-solution-using-r" class="slide level2">
 <h2>One solution (using R)</h2>
@@ -923,25 +924,30 @@ It’s often off by 1 or 2.</p>
 <img data-src="presentation_files/figure-revealjs/unnamed-chunk-9-1.png" width="960" class="r-stretch"><p>“Noise above 70 dB over a prolonged period of time may start to damage your hearing. Loud noise above 120 dB can cause immediate harm to your ears.”<br>
 - <a href="https://www.cdc.gov/nceh/hearing_loss/what_noises_cause_hearing_loss.html">CDC</a></p>
 </section>
-<section id="relationship-between-events-and-noise" class="slide level2">
-<h2>Relationship between events and noise</h2>
+<section id="relationship-between-events-and-noise-2020-data" class="slide level2">
+<h2>Relationship between events and noise (2020 data)</h2>
 
-<img data-src="presentation_files/figure-revealjs/unnamed-chunk-10-1.png" width="960" class="r-stretch"><p>I’m not sure where the locations are exactly.</p>
+<img data-src="presentation_files/figure-revealjs/unnamed-chunk-10-1.png" width="960" class="r-stretch"><p>I’m not sure where the locations are.</p>
 </section>
 <section id="conclusion" class="slide level2">
 <h2>Conclusion</h2>
 <div class="columns">
 <div class="column" style="width:50%;">
-<h3 id="next-steps">Next steps</h3>
+<h3 id="parsing-pdfs">Parsing PDFS</h3>
 <ul>
-<li>Process the other years of data (2012-2021)</li>
-<li>Analyze the data</li>
+<li>Easy to start / getting some data</li>
+<li>Extracting boxes works well</li>
+<li>Aligning text into rows can be challenging</li>
+<li>Data munging is heavy</li>
+<li>Overall a nice visual exercise that is methodologically interesting</li>
 </ul>
 </div><div class="column" style="width:50%;">
-<h3 id="pdfs">PDFS</h3>
+<h3 id="next-steps">Next steps</h3>
 <ul>
-<li>Relatively easy to parse (here)</li>
-<li>A nice visual and methodologically interesting task</li>
+<li>Process the other years of data (2012-2020) ✅</li>
+<li>Upload cleaned CSV to <a href="https://data.public.lu/fr/datasets/archives-bruit-des-avions/">data.public.lu</a> ✅</li>
+<li>Georeference the sensor locations</li>
+<li>Analyze 2012-2020 data</li>
 </ul>
 </div>
 </div>

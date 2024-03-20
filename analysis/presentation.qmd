@@ -10,8 +10,8 @@ editor_options:
   chunk_output_type: console
 ---
 
-## Problem ~ 1500 pages like this
-![](imgs/pdf_example.png "A screenshot of a PDF page with headings, a table, and graphs"){width=100%}
+## Problem: 12,200+ pages (over 8 years of data)
+![](imgs/pdf_example.png "A screenshot of a PDF page with headings, a table, and graphs"){width=70%}  
 Source: [Administration de la Navigation Aérienne](https://data.public.lu/fr/datasets/archives-bruit-des-avions/)
 
 ## One solution (using R)
@@ -201,7 +201,7 @@ Well at first I thought it would be simple (until it wasn't).
 
 ## The data
 ```{r, echo=FALSE}
-pp <- read.table(file = '../export_csv/2020_airport_noise_data2.csv', header=TRUE)
+pp <- read.table(file = '../export_csv/2020_airport_noise.csv', header=TRUE)
 
 # split into sites
 pps <- split(pp, pp$location)
@@ -248,28 +248,32 @@ garbage <- sapply(pps, function(site) {
 "Noise above 70 dB over a prolonged period of time may start to damage your hearing. Loud noise above 120 dB can cause immediate harm to your ears."  
 - [CDC](https://www.cdc.gov/nceh/hearing_loss/what_noises_cause_hearing_loss.html)
 
-## Relationship between events and noise
+## Relationship between events and noise (2020 data)
 ```{r}
 par(mar=c(4.1, 4.1, 0.1, 0.1))
 plot(jitter(pp$aircraft_events, factor = 2.4), pp$aircraft_LDEN_dB, pch=19, cex=0.3, xlab="Hourly aircraft events", ylab="Hourly noise (dB) from aircrafts", col=as.factor(pp$location))
-legend("bottomrigh", legend = unique(pp$location), fill=factor(unique(pp$location)))
-
+legend("bottomrigh", legend = unique(pp$location), fill=factor(unique(pp$location)), title = "Sample site")
 ```
 
-I'm not sure where the locations are exactly.
+I'm not sure where the locations are.
 
 ## Conclusion
 
 :::: {.columns}
 ::: {.column width="50%"}
-### Next steps
-- Process the other years of data (2012-2021)
-- Analyze the data
+### Parsing PDFS
+- Easy to start / getting some data
+- Extracting boxes works well
+- Aligning text into rows can be challenging
+- Data munging is heavy
+- Overall a nice visual exercise that is methodologically interesting
 :::
 
 ::: {.column width="50%"}
-### PDFS
-- Relatively easy to parse (here)
-- A nice visual and methodologically interesting task
+### Next steps
+- Process the other years of data (2012-2020) ✅
+- Upload cleaned CSV to [data.public.lu](https://data.public.lu/fr/datasets/archives-bruit-des-avions/) ✅
+- Georeference the sensor locations
+- Analyze 2012-2020 data
 :::
 ::::
