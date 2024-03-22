@@ -100,6 +100,7 @@ fixRows <- function(udf, method="nudge", classes_number=NA) {
 
 # process each PDF file
 for ( pdf_fn in list.files("../source_pdfs/") ) {
+  #pdf_fn <- list.files("../source_pdfs/")[9]
   pdf_fp = paste0("../source_pdfs/", pdf_fn)
   csv_fp = paste0("../export_csv/", strsplit(pdf_fn, "-")[[1]][1], "_airport_noise.csv")
   
@@ -112,7 +113,7 @@ for ( pdf_fn in list.files("../source_pdfs/") ) {
     
     # clean each page and row bind results
     cln_pdf <- do.call('rbind', lapply(all_pdf, function(apdf) {
-      #apdf <- all_pdf[[1378]]
+      #apdf <- all_pdf[[49]]
       apdf <- as.data.frame(apdf)
       
       # get the table

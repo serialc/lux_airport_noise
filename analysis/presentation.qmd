@@ -201,10 +201,10 @@ Well at first I thought it would be simple (until it wasn't).
 
 ## The data
 ```{r, echo=FALSE}
-pp <- read.table(file = '../export_csv/2020_airport_noise.csv', header=TRUE)
+pp <- read.table(file = '../export_csv/2020_airport_noise.csv', header=TRUE, sep=',', comment.char = "%")
 
 # split into sites
-pps <- split(pp, pp$location)
+pps <- split(pp, pp$site)
 
 aeci <- classIntervals(unique(pp$aircraft_LDEN_dB), 7, style="jenks")
 mypal <- c('#fee5d9','#fcbba1','#fc9272','#fb6a4a','#ef3b2c','#cb181d','#99000d')
@@ -240,7 +240,7 @@ garbage <- sapply(pps, function(site) {
   abline(h=c(10,20,30,60,70), lty=2, col="grey")
   text(rep(13, 5), y = c(10, 20, 30, 60, 70), labels = c("Normal breathing", "Ticking watch", "Soft whisper", "Normal conversation", "Prolonged noise damages ears"))
   
-  legend("bottomright", legend = c("Aircraft noise", "Ambient noise", "Combined noise"), lwd=2, col=c(2,3,1), title = site$location[1])
+  legend("bottomright", legend = c("Aircraft noise", "Ambient noise", "Combined noise"), lwd=2, col=c(2,3,1), title = site$site[1])
 })
 
 ```
@@ -251,8 +251,8 @@ garbage <- sapply(pps, function(site) {
 ## Relationship between events and noise (2020 data)
 ```{r}
 par(mar=c(4.1, 4.1, 0.1, 0.1))
-plot(jitter(pp$aircraft_events, factor = 2.4), pp$aircraft_LDEN_dB, pch=19, cex=0.3, xlab="Hourly aircraft events", ylab="Hourly noise (dB) from aircrafts", col=as.factor(pp$location))
-legend("bottomrigh", legend = unique(pp$location), fill=factor(unique(pp$location)), title = "Sample site")
+plot(jitter(pp$aircraft_events, factor = 2.4), pp$aircraft_LDEN_dB, pch=19, cex=0.3, xlab="Hourly aircraft events", ylab="Hourly noise (dB) from aircrafts", col=as.factor(pp$site))
+legend("bottomrigh", legend = unique(pp$site), fill=factor(unique(pp$site)), title = "Sample site")
 ```
 
 I'm not sure where the locations are.

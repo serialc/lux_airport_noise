@@ -1,0 +1,126 @@
+---
+title: "Luxembourg Airport Noise Evolution"
+author: "Cyrille Médard de Chardon"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+## The Data
+
+The data from the [Administration de la Navigation Aérienne](https://data.public.lu/fr/datasets/archives-bruit-des-avions/) is for late 2012 to 2020.
+
+```{r}
+#| echo: false
+
+# Analysis of 8+ years of noise data for luxembourg airport
+
+csvfiles <- list.files('../export_csv/')
+
+# get all lux airport noise (alan) data into one long file
+alan <- do.call('rbind', lapply(csvfiles, function(fn) {
+  #fn <- csvfiles[9]
+  print(fn)
+  lan <- read.table(file = paste0('../export_csv/', fn), header=TRUE, sep=",", quote = "\"", comment.char = "%")
+  return(lan)
+}))
+
+# split by site/location
+sites <- split(alan, alan$site)
+print(sapply(sites, nrow))
+```
+
+```{r}
+#| echo: false
+
+# for each site let's look at a few different things
+par(mar=c(4.1, 4.1, 2, 0.1))
+garbage <- sapply(sites, function(site) {
+  #site <- sites[[1]]
+  site$dt <- strptime(paste0(site$date, site$hour), format = "%d/%m/%y %H:%M")
+  
+  # order the data - it looks like 2014 either has 2012 data or something else
+  os <- site[order(site$dt),]
+  
+  # get the daily mean of 'total' noise (aircraft plus background)
+  date_means <- sapply(split(os$total_LDEN_dB, as.Date(os$dt)), mean, na.rm=TRUE)
+  dates <- unique(as.Date(os$dt))
+  plot(dates, date_means, pch=19, cex=0.3, main=paste("Total noise", os$site[1]), xlab="Date", ylab="Noise (dB)")
+ })
+```
+
+The total noise data is of relatively poor quality:  
+
+- **DVOR NMT # 2** has a few large changes in noise lasting a few months  
+- **Gare centrale NMT # 5** has a large jump in 2013 that is likely error
+- **Mid Runway NMT # 3** jumps around and is worthless
+- **NDB-Hamm NMT # 4** has a slight increase over time but there are again jumps
+- **Roodt/Syr NMT #1** appears better with only a few errors
+
+
+Let's take a look at the number of 'aircraft events' which are assumed to be a plane landing or take-off in the vicinity of the noise sensors.
+```{r, echo=false}
+#| echo: false
+
+par(mar=c(4.1, 4.1, 2, 0.1))
+garbage <- sapply(sites, function(site) {
+  #site <- sites[[1]]
+  site$dt <- strptime(paste0(site$date, site$hour), format = "%d/%m/%y %H:%M")
+  
+  # order the data - it looks like 2014 either has 2012 data or something else
+  os <- site[order(site$dt),]
+  
+  # get the daily aircraft event count
+  date_sum <- sapply(split(os$aircraft_events, as.Date(os$dt)), sum, na.rm=TRUE)
+  dates <- unique(as.Date(os$dt))
+  plot(dates, date_sum, pch=19, cex=0.3, main=paste("Total noise", os$site[1]), xlab="Date", ylab="Noise (dB)")
+ })
+```
+
+Looking at the daily number of "aircraft events" we see a similar level of jumps and gaps - aside from natural variability. There is a general increase in aircraft events over the data period. A noticeable drop is present in early 2020 due to the pandemic.
+
+Let's look at the reported noise level of the aircrafts. This is tricky as the reported noise only represents a short portion of the hour the value is said to represent. Creating a mean daily value doesn't have much meaning as two days with the same number of flights (and all else equal) with the exception of one day having the flights spread out and the other having them concentrated in one hour will yield different results.
+
+For this reason we only report the loudest reading for each day.
+
+```{r, echo=false}
+#| echo: false
+
+par(mar=c(4.1, 4.1, 2, 0.1))
+garbage <- sapply(sites, function(site) {
+  #site <- sites[[1]]
+  site$dt <- strptime(paste0(site$date, site$hour), format = "%d/%m/%y %H:%M")
+  
+  # order the data - it looks like 2014 either has 2012 data or something else
+  os <- site[order(site$dt),]
+  
+  date_val <- sapply(split(os$aircraft_LDEN_dB, as.Date(os$dt)), function(x) {
+    #x <- split(os$aircraft_LDEN_dB, as.Date(os$dt))[[219]]
+    if( all(is.na(x)) ) { return(NA) }
+    max(x, na.rm=TRUE)
+    })
+  
+  dates <- unique(as.Date(os$dt))
+  plot(dates, date_val, pch=19, cex=0.3, main=paste("Daily aircraft mean noise", os$site[1]), xlab="Date", ylab="Noise (dB)")
+ })
+```
+
+## Flight event noise levels
+
+```{r}
+#| echo: false
+
+par(mar=c(4.1, 4.1, 2, 0.1))
+garbage <- sapply(sites, function(site) {
+  #site <- sites[[1]]
+  site$dt <- strptime(paste0(site$date, site$hour), format = "%d/%m/%y %H:%M")
+  
+  plot(jitter(site$aircraft_events, factor = 2.4), site$aircraft_LDEN_dB, pch=19, cex=0.3, xlab="Hourly aircraft events", ylab="Hourly noise (dB) from aircrafts", main=site$site[1] )
+  
+ })
+
+```
+
+## Conclusion
+
+The data is of relatively poor quality but it's possible to extract some weak or slight trends. It would however be necessary to learn more about where the sensors are and a study of what policy initiatives/changes have been applied to reduce noise (if any/at all).
