@@ -20,7 +20,6 @@ csvfiles <- list.files('../export_csv/')
 # get all lux airport noise (alan) data into one long file
 alan <- do.call('rbind', lapply(csvfiles, function(fn) {
   #fn <- csvfiles[9]
-  print(fn)
   lan <- read.table(file = paste0('../export_csv/', fn), header=TRUE, sep=",", quote = "\"", comment.char = "%")
   return(lan)
 }))
